@@ -1,0 +1,4480 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fault Management REST APIs",
+    "description": "<p>The Fault Management application provides a means of investigating faults in a network. A user can view information about faults, such as their causes and impacts. Below is a list of published URLs that can be used in the browser to observe different parts of the application, followed by the API that can be used to obtain information about alarms. Where URL encoding is required (see the individual API requests), this API expects the encoding to use the UTF-8 character-set. <br /><br /></p><p><b>Published URLs</b></p><p>&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/current-alarm-list <br />&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/current-alarm-statistics <br />&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/merged-alarm-list <br />&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/historical-alarm-list <br />&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/unhealthy-nes <br />&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/top-problems <br /></p><p>&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/current-alarm-list?advancedFilter=&#60;<span style='font-style:italic'>alarmId_expression</span>&#62; <br />Where the value for &#60;<span style='font-style:italic'>alarmId_expression</span>&#62; is an encoded expression: modelFdn=&#34;&#60;<span style='font-style:italic'>alarm_id</span>&#62;&#34; <br /></p><p>&#60;<span style='font-style:italic'>host</span>&#62;/web/fault-management/current-alarm-list?context1=&#60;<span style='font-style:italic'>context1</span>&#62; <br />Where the value for &#60;<span style='font-style:italic'>context1</span>&#62; is an encoded object: {&#34;siteId&#34;:&#34;&#60;<span style='font-style:italic'>site_id</span>&#62;&#34;,&#34;siteName&#34;:&#34;&#60;<span style='font-style:italic'>site_name</span>&#62;&#34;} <br /></p><p><b>Access Information</b></p><p>Prior to accessing the API services below, the API client must authenticate the NSP user via the NSP REST Gateway's authentication API service. The api-docs for the REST Gateway can be found with the NSP Product at: </p><p>https://&#60;server&#62;:&#60;port&#62;/rest-gateway/api-docs/ - where &#60;server&#62; is the hostname/FQDN/IP address of the installed server</p><p>or via the NSP DevPortal at: </p><p><a href='https://network.developer.nokia.com/api-documentation/'>https://network.developer.nokia.com/api-documentation/</a> - you will need to create an account on the NSP DevPortal to gain access to the api-docs</p><p>To view correlation rules, see <a href='rules.html'>Correlation Rule Documentation</a>.</p><p><b>Streaming</b></p><p>When requesting streaming data, use a streaming client to avoid client memory issues or invalid data. Additionally, the &#34;Try it out&#34; button next to the endpoint is not supported for streaming data. <br />Only one FaultManagement streaming request is allowed at a time.</p>",
+    "license": {},
+    "version": "v2"
+  },
+  "servers": [
+    {
+      "url": "https://wavesuite.example.com/FaultManagement/rest/api",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "REST Token": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "alarms",
+      "description": "Alarms"
+    },
+    {
+      "name": "alarmSettings",
+      "description": "Alarm Settings (Does not apply to NFM-P)"
+    },
+    {
+      "name": "alarmedObjects",
+      "description": "Alarmed Objects"
+    },
+    {
+      "name": "historicalAlarms",
+      "description": "Historical Alarms (Does not apply to NFM-P)"
+    }
+  ],
+  "paths": {
+    "/v2/alarms": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a list of specific alarms",
+        "description": "Find a list of specific alarms, default page size of 1000. The list will contain the alarmFdn of each resulting alarm. Not providing a filter will return all alarms.<br/>When requesting streaming data, use a streaming client to avoid client memory issues or invalid data. Additionally, the \"Try it out\" button next to the endpoint is not supported for streaming data.<br/>Only one FaultManagement streaming request is allowed at a time.",
+        "operationId": "getAlarms",
+        "parameters": [
+          {
+            "name": "alarmFilter",
+            "in": "query",
+            "description": "The criteria by which to filter (Double URL encoded) (Optional)<br/>Note: values with a single quote must be escaped with a second single quote.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional). For an end row corresponding to the last row, set the pageEnd parameter to 0.<br/>pageEnd value 0 and page size greater than 1000 are only supported when accepting type application/stream+json.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/stream+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSetResponseData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSetResponseData"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Create a new alarm with given attributes (Does not apply to NFM-P).",
+        "description": "FOR LAB USE ONLY<br/>Create a new alarm with given attributes (Does not apply to NFM-P).<br/>sourceSystem / objectFullName combination is unique and may not correspond to any existing alarm.<br/>Further guidelines are described for each alarm property in the alarmEntityNode Model below.<br/>",
+        "operationId": "createAlarm",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their values { \"parameter\":\"value\" }.<br/> Required and supported parameters along with corresponding limitations are described in the model",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlarmEntityNode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}/acknowledgements": {
+      "post": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Acknowledge specified alarm",
+        "description": "Acknowledge specified alarm, optionally changing severity and adding an acknowledgment note.",
+        "operationId": "acknowledgeAlarm",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "description": "New severity for the acknowledged alarm (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ackNote",
+            "in": "query",
+            "description": "Acknowledgement note for the acknowledged alarm (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}/acknowledgementNotes": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Get acknowledgement notes for the specified alarm",
+        "description": "Get acknowledgement notes for the specified alarm.",
+        "operationId": "getAckNotes",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListMapObjectObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Add an acknowledgement note to the specified alarm",
+        "description": "Add an acknowledgement note to the specified alarm. Alarm must be acknowledged.",
+        "operationId": "addAcknowledgeNoteAlarm",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ackNote",
+            "in": "query",
+            "description": "Acknowledgement note for the acknowledged alarm",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataMapObjectObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/squelchedEntities": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Get a list of ports, network elements and resource groups that are currently squelched",
+        "description": "Get a paged list of ports, network elements and resource groups that are currently squelched. Default page size is 1000.",
+        "operationId": "getSquelchedEntities",
+        "parameters": [
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Squelch an entity",
+        "description": "Squelch an entity.",
+        "operationId": "squelchEntity",
+        "requestBody": {
+          "description": "A JSON body containing the FDN of the port, network element or resource group to be squelched. The port or network element FDN can be retrieved from the 'ports' or 'network elements' APIs within the Network Supervision application. Refer to the Network Supervision REST API Documentation. The resource group FDN can be retrieved with the 'port' or 'networkElement' category from the 'groups' API within the Group Manager application. Refer to the Group Manager REST API Documentation.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SquelchedEntityNode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/emailPolicies": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the alarm e-mail policies",
+        "description": "Get the alarm e-mail policies.",
+        "operationId": "getAlarmEmailPolicies",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListEmailNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Create the alarm e-mail policy",
+        "description": "Create the alarm e-mail policy.",
+        "operationId": "createAlarmEmailPolicy",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain all of the following parameters.<br/><br/>enabled (boolean)<br/><br/>policyName (string) up to 50 characters maximum. Must not contain special characters such as: \\%.\"'.<br/><br/>policyFilter (string) must match the name of an existing public saved filter in the Fault Management application<br/><br/>emailRecipients (string) comma separated list of e-mail addresses, up to a maximum of 20 email addresses<br/><br/>maxFrequency (int) maximum e-mails per hour, valid range 1 - 10",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "policyName": "myPolicy",
+                  "policyFilter": "myFilter",
+                  "emailRecipients": "",
+                  "maxFrequency": 2
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find information for the specifed alarm",
+        "description": "Find detailed information for the specified alarm.",
+        "operationId": "getAlarmInfo_1",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataAlarmDataV2"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Delete the specifed alarm",
+        "description": "Delete the specified alarm.",
+        "operationId": "deleteAlarm",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Update attributes for the specifed alarm",
+        "description": "Update attributes for the specified alarm. Supported attributes are userText, severity and adminState. Only one parameter can be updated per request. Updates to NFM-P alarms experience a small time delay to be reflected, this is expected behavior.",
+        "operationId": "updateAlarmInfo",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values { \"parameter\":\"value\" }. Supported parameters are userText, severity and adminState.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "severity",
+                  "adminState",
+                  "userText"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/severity": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the active alarm severity settings",
+        "description": "Get the active alarm severity settings.",
+        "operationId": "getAlarmSeveritySettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataSeverityNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the active alarm severity settings",
+        "description": "Update the active alarm severity settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateAlarmSeveritySettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled - boolean<br/><br/>manual - object with at least one of the following parameters {enabled(boolean), allowManualPromotion(boolean), allowManualDemotion(boolean), allowManualClearingOfAutoClearingAlarms(boolean)}<br/><br/>automatic - object with at least one of the following parameters {enabled(boolean), allowPolicyBasedEscalation(boolean), allowPolicyBasedDeEscalation(boolean)}",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "manual": {
+                    "enabled": true,
+                    "allowManualPromotion": true,
+                    "allowManualDemotion": true
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/overflow": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the active alarm overflow settings",
+        "description": "Get the active alarm overflow settings.",
+        "operationId": "getAlarmOverflowSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataOverflowNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the active alarm overflow settings",
+        "description": "Update the active alarm overflow settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateAlarmOverflowSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>warningThreshold - int (%) min=50 max=100<br/><br/>overflowAction - string (wrap/halt)<br/><br/>purgeCriteria - string (severity/time)<br/><br/>purgePercent - int (% of alarms) min=10 max=25",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "warningThreshold": 90,
+                  "overflowAction": "wrap",
+                  "purgeCriteria": "severity",
+                  "purgePercent": 10
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/historicalOverflow": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the historical alarm overflow settings",
+        "description": "Get the historical alarm overflow settings.",
+        "operationId": "getAlarmHistoricalOverflowSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHistoricalOverflowNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the historical alarm overflow settings",
+        "description": "Update the historical alarm overflow settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateHistoricalOverflowSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>maxSize - int min=100000 max=10000000<br/><br/>criticalThreshold - int (%) min=75 max=100<br/><br/>criticalPurgePercent - int (%) min=10 max=25<br/><br/>warningThreshold - int (%) min=60 max=99<br/><br/>warningPurgePercent - int (%) min=1 max=15",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "maxSize": 1000000,
+                  "criticalThreshold": 100,
+                  "criticalPurgePercent": 10,
+                  "warningThreshold": 95,
+                  "warningPurgePercent": 3
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/historicalArchive": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the historical alarm archive settings",
+        "description": "Get the historical alarm archive settings.",
+        "operationId": "getAlarmHistoricalSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHistoricalNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the historical alarm archive settings",
+        "description": "Update the historical alarm archive settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateHistoricalAlarmSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled - boolean<br/><br/>logOnChange - boolean<br/><br/>logOnDelete - boolean",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "logOnChange": false,
+                  "logOnDelete": true
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/emailPolicies/{policyFdn}": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the alarm e-mail policy",
+        "description": "Get the alarm e-mail policy.",
+        "operationId": "getAlarmEmailPolicy",
+        "parameters": [
+          {
+            "name": "policyFdn",
+            "in": "path",
+            "description": "The policy FDN (double URL encoded). Value can be obtained from the GET alarm e-mail policies response.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataEmailNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Delete the alarm e-mail policy",
+        "description": "Delete the alarm e-mail policy.",
+        "operationId": "deleteAlarmEmailPolicy",
+        "parameters": [
+          {
+            "name": "policyFdn",
+            "in": "path",
+            "description": "The policy FDN (double URL encoded). Value can be obtained from the GET alarm e-mail policies response.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the alarm e-mail policy",
+        "description": "Update the alarm e-mail policy.",
+        "operationId": "updateAlarmEmailPolicy",
+        "parameters": [
+          {
+            "name": "policyFdn",
+            "in": "path",
+            "description": "The policy FDN (double URL encoded). Value can be obtained from the GET alarm e-mail policies response.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled (boolean)<br/><br/>policyFilter (string) must match the name of an existing public saved filter in the Fault Management application<br/><br/>emailRecipients (string) comma separated list of e-mail addresses, up to a maximum of 20 email addresses<br/><br/>maxFrequency (int) maximum e-mails per hour, valid range 1 - 10",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "maxFrequency": 2
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/deletion": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the active alarm deletion settings",
+        "description": "Get the active alarm deletion settings.",
+        "operationId": "getAlarmDeletionSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataDeleteNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the active alarm deletion settings",
+        "description": "Update the active alarm deletion settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateAlarmDeletionSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled - boolean<br/><br/>manual - object with at least one of the following parameters {enabled(boolean), deletionRule(string - deleteWhenCleared, deleteWhenAcknowledged, deleteWhenClearedOrAcknowledged, deleteWhenClearedAndAcknowledged, deleteNoRestriction)}<br/><br/>correlated - object with at least one of the following parameters {enabled(boolean), deletionRule(string - deleteWithNotification, deleteWithoutNotification)}<br/><br/>automatic - object with at least one of the following parameters {enabled(boolean), deletionRule(string - deleteWhenCleared, deleteWhenAcknowledged, deleteWhenClearedOrAcknowledged, deleteWhenClearedAndAcknowledged)}",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "manual": {
+                    "enabled": true,
+                    "deletionRule": "deleteWhenCleared"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/alarmPolicies/{alarmPolicyFdn}": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get a specific individual alarm policy.",
+        "description": "Get a specific individual alarm policy.",
+        "operationId": "getSingleIndividualAlarmPolicy",
+        "parameters": [
+          {
+            "name": "alarmPolicyFdn",
+            "in": "path",
+            "description": "The policy FDN (double URL encoded). Value can be obtained from the GET individual alarm policies response.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataIndividualAlarmPolicyNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update a specific individual alarm policy.",
+        "description": "Update a specific individual alarm policy.",
+        "operationId": "updateIndividualAlarmPolicy",
+        "parameters": [
+          {
+            "name": "alarmPolicyFdn",
+            "in": "path",
+            "description": "The policy FDN (double URL encoded). Value can be obtained from the GET individual alarm policies response.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>autoAck (boolean) - Automatically acknowledge incoming alarms.<br/><br/>autoDeletionDays (int) - Delete after (days); min=1 max=30<br/><br/>deEscalationPolicy - De-Escalation Threshold (severity, type, value)<br/><br/>debouncingEnabled (boolean) - Enable or disable alarm debouncing. Only applies to implicitly cleared alarms.<br/><br/>debouncingHoldPeriod (int) - The amount of time in seconds for which an alarm should be held when debounced; min=10 max=600<br/><br/>escalationPolicy - Escalation Threshold (severity, type, value) <br/><br/>historyEnabled (boolean) - Log alarm history. <br/><br/>initialSeverity (string) - Override incoming alarm severity.<br/><br/>squelch (boolean) - Drop and do not record incoming alarms.<br/><br/>useAlarmPolicyAging(boolean) - Enable or disable aging at policy level. Cannot be enabled if useGlobalAging is enabled. Only applies to non implicitly cleared alarms.<br/><br/>useGlobalAging (boolean) - Use the defined global aging settings. Cannot be enabled if useAlarmPolicyAging is enabled. Only applies to non implicitly cleared alarms.<br/><br/>userText (string) - Add up to 4096 characters of custom text.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndividualAlarmPolicyChangeNode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/aging": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the active alarm aging settings",
+        "description": "Get the active alarm aging settings.",
+        "operationId": "getAlarmAgingSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataAgingNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the active alarm aging settings",
+        "description": "Update the active alarm aging settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateAlarmAgingSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled - boolean<br/><br/>agingTime - int (days) min=1 max=30",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "agingTime": 4
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/acknowledgement": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get the active alarm acknowledgement settings",
+        "description": "Get the active alarm acknowledgement settings.",
+        "operationId": "getAlarmAcknowledgementSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataAckNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Update the active alarm acknowledgement settings",
+        "description": "Update the active alarm acknowledgement settings. Any content in the request body will be validated as a configuration attempt, and the request will be blocked if any section of the configuration is disabled. Users are advised to send only the parameters that they wish to update.",
+        "operationId": "updateAlarmAcknowledgementnSettings",
+        "requestBody": {
+          "description": "JSON compatible string containing parameters and their new values.<br/><br/>The JSON string should contain at least one of the following parameters.<br/><br/>enabled - boolean<br/><br/>correlated - object with at least one of the following parameters {enabled(boolean), acknowledgementRule(string - acknowledgeWithNotification, acknowledgeWithoutNotification)}<br/><br/>automatic - object with at least one of the following parameters {enabled(boolean)}",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "example": {
+                  "enabled": true,
+                  "automatic": {
+                    "enabled": true
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/historicalAlarms": {
+      "get": {
+        "tags": [
+          "historicalAlarms"
+        ],
+        "summary": "Get historical alarms for an NE.",
+        "description": "Get a paged list of historical alarms for an NE, default page size of 1000.",
+        "operationId": "getHistoricalAlarms",
+        "parameters": [
+          {
+            "name": "neId",
+            "in": "query",
+            "description": "The NeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeFrame",
+            "in": "query",
+            "description": "The timeFrame. This describes how far in the past to retrieve alarms. In (h)ours or (d)ays<br/>*Supported Values: 1h, 12h, 1d, 7d, 30d, all*",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "12h",
+                "1d",
+                "7d",
+                "30d",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "alarmFilter",
+            "in": "query",
+            "description": "The criteria by which to filter (Double URL encoded, fdn field not supported) (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHashSetString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/historicalAlarms/{alarmFdn}": {
+      "get": {
+        "tags": [
+          "historicalAlarms"
+        ],
+        "summary": "Find information for the specifed historical alarm",
+        "description": "Find detailed information for the specified historical alarm. The lifespan value is in minutes.",
+        "operationId": "getAlarmInfo",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHistoricalAlarmDataV2"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/historicalAlarms/details": {
+      "get": {
+        "tags": [
+          "historicalAlarms"
+        ],
+        "summary": "Get historical alarms for an NE.",
+        "description": "Get a paged list of historical alarms for an NE, default page size of 1000. The list will contain the alarm information of each resulting historical alarm.",
+        "operationId": "getHistoricalAlarmsDetails",
+        "parameters": [
+          {
+            "name": "propertyList",
+            "in": "query",
+            "description": "A comma separated list of desired alarm properties (Double URL encoded) (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "neId",
+            "in": "query",
+            "description": "The NeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeFrame",
+            "in": "query",
+            "description": "The timeFrame. This describes how far in the past to retrieve alarms. In (h)ours or (d)ays<br/>*Supported Values: 1h, 12h, 1d, 7d, 30d, all*",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "12h",
+                "1d",
+                "7d",
+                "30d",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "alarmFilter",
+            "in": "query",
+            "description": "The criteria by which to filter (Double URL encoded, fdn field not supported) (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListHistoricalAlarmDataV2"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}/impacts": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a tree of impacts for the alarm",
+        "description": "Find a tree of impacts for the alarm.",
+        "operationId": "getAlarmImpacts",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarmFdn (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataImpactNode"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}/causes": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a tree of causes for the alarm",
+        "description": "Find a tree of causes for the alarm.",
+        "operationId": "getAlarmCauses",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm alarmFdn (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataCauseNode"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/rootCauses": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a list of root cause alarms",
+        "description": "Find a list of root cause alarms, default page size of 1000. The list will contain the alarmFdn of each resulting alarm.<br/>When requesting streaming data, use a streaming client to avoid client memory issues or invalid data. Additionally, the \"Try it out\" button next to the endpoint is not supported for streaming data.<br/>Only one FaultManagement streaming request is allowed at a time.",
+        "operationId": "getRootAlarms",
+        "parameters": [
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional). For an end row corresponding to the last row, set the pageEnd parameter to 0.<br/>pageEnd value 0 and page size greater than 1000 are only supported when accepting type application/stream+json.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/stream+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSetResponseData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSetResponseData"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/rootCauses/details": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a list of root cause alarms",
+        "description": "Find a list of root cause alarms, default page size of 1000. The list will contain the alarm information of each resulting alarm.<br/>When requesting streaming data, use a streaming client to avoid client memory issues or invalid data. Additionally, the \"Try it out\" button next to the endpoint is not supported for streaming data.<br/>Only one FaultManagement streaming request is allowed at a time.",
+        "operationId": "getRootAlarmsDetails",
+        "parameters": [
+          {
+            "name": "propertyList",
+            "in": "query",
+            "description": "A comma separated list of desired alarm properties (Double URL encoded) (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional). For an end row corresponding to the last row, set the pageEnd parameter to 0.<br/>pageEnd value 0 and page size greater than 1000 are only supported when accepting type application/stream+json.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/stream+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRootCauseDetailsResponseData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmRootCauseDetailsResponseData"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/details": {
+      "get": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Find a list of specific alarms",
+        "description": "Find a list of specific alarms, default page size of 1000. The list will contain the alarm information of each resulting alarm. Not providing a filter will return all alarms.<br/>When requesting streaming data, use a streaming client to avoid client memory issues or invalid data. Additionally, the \"Try it out\" button next to the endpoint is not supported for streaming data.<br/>Only one FaultManagement streaming request is allowed at a time.",
+        "operationId": "getAlarmsDetails",
+        "parameters": [
+          {
+            "name": "propertyList",
+            "in": "query",
+            "description": "A comma separated list of desired alarm properties (Double URL encoded) (Optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "alarmFilter",
+            "in": "query",
+            "description": "The criteria by which to filter (Double URL encoded) (Optional). The rootCauseAndImpactDetails property is not supported.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional). For an end row corresponding to the last row, set the pageEnd parameter to 0.<br/>pageEnd value 0 and page size greater than 1000 are only supported when accepting type application/stream+json.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "includeRootCauseAndImpactDetails",
+            "in": "query",
+            "description": "Whether to include root cause and impact details for each alarm (Optional). Default value is false. When this parameter is true, the rootCauseAndImpactDetails property is appended to the set of returned alarm properties.<br/>Only supported when accepting type application/stream+json.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/stream+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmDetailsResponseData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmDetailsResponseData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmedObjects/{affectedObjectFdn}/alarms": {
+      "get": {
+        "tags": [
+          "alarmedObjects"
+        ],
+        "summary": "Find a list of alarms for the specified object",
+        "description": "Find a paged list of alarms for the specified object, default page size of 1000. The list will contain the alarm FDN of each resulting alarm.",
+        "operationId": "getObjectAlarms",
+        "parameters": [
+          {
+            "name": "affectedObjectFdn",
+            "in": "path",
+            "description": "The source FDN of the alarms affectedObject (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHashSetString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmedObjects/{affectedObjectFdn}/aggregatedAlarms": {
+      "get": {
+        "tags": [
+          "alarmedObjects"
+        ],
+        "summary": "Find a list of aggregated alarms for the specified object",
+        "description": "Find a paged list of aggregated alarms for the specified object, default page size of 1000. The list will contain the alarm FDN of each resulting alarm.",
+        "operationId": "getAggregatedAlarms",
+        "parameters": [
+          {
+            "name": "affectedObjectFdn",
+            "in": "path",
+            "description": "The source FDN of the alarmed object",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataHashSetString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarmSettings/alarmPolicies": {
+      "get": {
+        "tags": [
+          "alarmSettings"
+        ],
+        "summary": "Get all individual alarm policies.",
+        "description": "Get all individual alarm policies.",
+        "operationId": "getIndividualAlarmPolicies",
+        "parameters": [
+          {
+            "name": "pageStart",
+            "in": "query",
+            "description": "Start row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageEnd",
+            "in": "query",
+            "description": "End row for paged data (Optional)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListIndividualAlarmPolicyNode"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/{alarmFdn}/acknowledgements/{ackFdn}": {
+      "delete": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Unacknowledge specified alarm",
+        "description": "Unacknowledge specified alarm, acknowlegement notes will be deleted.",
+        "operationId": "unacknowledgeAlarm",
+        "parameters": [
+          {
+            "name": "alarmFdn",
+            "in": "path",
+            "description": "The alarm FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ackFdn",
+            "in": "path",
+            "description": "The acknowlegment FDN (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v2/alarms/squelchedEntities/{fdn}": {
+      "delete": {
+        "tags": [
+          "alarms"
+        ],
+        "summary": "Unsquelch an entity",
+        "description": "Unsquelch an entity.",
+        "operationId": "unSquelchEntity",
+        "parameters": [
+          {
+            "name": "fdn",
+            "in": "path",
+            "description": "The FDN of the port, network element or resource group to be unsquelched. (Double URL encoded)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataString"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlarmEntityNode": {
+        "required": [
+          "affectedObject",
+          "affectedObjectName",
+          "affectedObjectType",
+          "alarmName",
+          "alarmType",
+          "implicitlyCleared",
+          "objectFullName",
+          "probableCause",
+          "severity",
+          "sourceSystem",
+          "sourceType"
+        ],
+        "type": "object",
+        "properties": {
+          "additionalText": {
+            "type": "string",
+            "description": "A free form text description to be reported by the source.<br/>Alarms can be customized using this field.<br/>The value in the newly created alarm will be prepended with \"FOR LAB USE ONLY\".<br/>The maximum number of characters allowed is 4096, including the prefix \"FOR LAB USE ONLY - \".",
+            "example": "Interface 1/1/9 is not operational"
+          },
+          "affectedObject": {
+            "type": "string",
+            "description": "The source identifier of the object that the alarm is affecting.<br/>Must be in a valid modelFdn format i.e. \"fdn:&lt;scheme&gt;:&lt;namespace&gt;:&lt;fdn&gt;\".<br/>All alarms sharing the same affectedObject value also share the same UAC applicability rules. For that reason:<ul><li>All alarms raised with a given affectedObject must share the same affectedObjectType</li><li>When an alarm is raised for a given affectedObject with a neId corresponding to a NetworkElement, any other alarm raised with the same affectedObject must be raised with the same neId</li></ul><p>Examples: For WS-NOC alarms, this is the FDN of the affected object on the NFM.<br/>That value is used to cross launch to the NFM.<br/>Alarm on a Network Element -> The FDN of the network element as known by its data source (MDM adaptors)<br/>Alarm on any equipment children of an NE; shelf, card, port, etc. -> The FDN of the equipment as known by its data source (i.e. MDM adaptors)<br/>Alarm on a service -> The FDN of the service as known by its data source (e.g. SF)<br/>Alarm on a service site -> The FDN of the service site as known by its data source (e.g. SF)</p>",
+            "example": "fdn:app:mdm-ami-cmodel:11.22.33.44:equipment:Equipment:/port[port-id='1/1/9']"
+          },
+          "affectedObjectName": {
+            "type": "string",
+            "description": "The displayed name of the affected object.",
+            "example": "port=1/1/9"
+          },
+          "affectedObjectType": {
+            "type": "string",
+            "description": "The type of the affected object.<br/>The restrictions below are required for FM features such as access control and alarm squelching:<ul><li>When the affected object is persisted in NSP, the value must correspond to the NSP entity type for which that affected object is persisted i.e. \"&lt;model.name&gt;.&lt;entity.name&gt;\"</li><li>When the affected object is not persisted in NSP, then the value must not be equal to any existing NSP entity types</li></ul>",
+            "example": "equipment.Equipment"
+          },
+          "alarmName": {
+            "type": "string",
+            "description": "The name of the alarm.<br/>The value should use CamelCase notation with a leading capital.<br/>Avoid ending the value with the word \"Alarm\" which is redundant.<br/>Consider reusing existing alarm names where applicable.",
+            "example": "LinkDown"
+          },
+          "alarmType": {
+            "type": "string",
+            "description": "The broad category of the alarm.<br/>The value should use camelCase notation with a leading lowercase.<br/>The complete list of expected values below corresponds to ITU-T X.733 or other standards, such as ITU-T M.3100, 2G and 3G.<ul><li>communicationsAlarm: Principally associated with the procedures and/or processes required to convey information from one point to another</li><li>environmentalAlarm: Principally associated with a condition relating to an enclosure in which the equipment resides</li><li>equipmentAlarm: Principally associated with an equipment fault</li><li>integrityViolationAlarm: An indication that information may have been illegally modified, inserted or deleted</li><li>operationalViolationAlarm: An indication that the provision of the requested service was not possible due to the unavailability, malfunction or incorrect invocation of the service</li><li>physicalViolationAlarm: An indication that a physical resource has been violated in a way that suggests a security attack</li><li>processingErrorAlarm: Principally associated with a software or processing fault</li><li>qualityOfServiceAlarm: Principally associated with a degradation in the quality of a service</li><li>securityServiceOrMechanismViolationAlarm: An indication that a security attack has been detected by a security service or mechanism</li><li>timeDomainViolationAlarm: An indication that an event has occurred at an unexpected or prohibited time.</li><li>unknownAlarm</li></ul>",
+            "example": "processingErrorAlarm",
+            "enum": [
+              "communicationsAlarm, environmentalAlarm, equipmentAlarm, integrityViolationAlarm, operationalViolationAlarm, physicalViolationAlarm, processingErrorAlarm, qualityOfServiceAlarm, securityServiceOrMechanismViolationAlarm, timeDomainViolationAlarm, unknownAlarm"
+            ]
+          },
+          "firstTimeDetected": {
+            "type": "integer",
+            "description": "The first time the alarm condition was detected, in UNIX Epoch time.<br/>The Network Element usually provides this value.",
+            "format": "int64",
+            "example": 1642208796200
+          },
+          "impact": {
+            "type": "integer",
+            "description": "WS-NOC specific.<br/>The impact count of the alarm.<br/>The impact count represents the total number of other alarms caused by this alarm.<br/>When provided and greater than 0, the impact value is not calculated by the Fault Management application.",
+            "format": "int32"
+          },
+          "implicitlyCleared": {
+            "type": "boolean",
+            "description": "Indicates if an alarm will be automatically cleared by the source after the raising condition is resolved."
+          },
+          "lastTimeDetected": {
+            "type": "integer",
+            "description": "The most recent time the alarm condition was detected, in UNIX Epoch time.<br/>The Network Element usually provides this value.",
+            "format": "int64",
+            "example": 1642208796200
+          },
+          "neId": {
+            "type": "string",
+            "description": "This field is required if the alarm is raised on an Network Element or any entity which is associated with a specific NE.<br/>This allows the Fault Management application to associate the alarm to an NE.<br/>In this case, the neId is the IP of the NE.<br/>For system wide alarms, this field does not need to be specified.<br/>Examples: 11.22.33.44 (ipv4), 2001:0DB8:85A3:0:0:8A2E:370:7334 (ipv6)",
+            "example": "11.22.33.44"
+          },
+          "neName": {
+            "type": "string",
+            "description": "If the alarm is raised on an NE or any entity which is associated with a specific NE,<br/>the neName corresponds to the name of the NE.<br/>If not provided, the Fault Management application will try to get the neName from the equipment model.<br/>For system wide alarms, this field does not need to be specified.",
+            "example": "Montreal23"
+          },
+          "nodeTimeOffset": {
+            "type": "integer",
+            "description": "The time offset of the NMS or Network Element where the alarm occurred.<br/>Used internally for WS-NOC alarms to calculate firstTimeDetectedNms,<br/>and for LTE alarms to calculate lastTimeDetectedNode and firstTimeDetectedNode.",
+            "format": "int64"
+          },
+          "numberOfOccurrences": {
+            "type": "integer",
+            "description": "The number of times the alarm has been raised.<br/>Deleting the alarm should reset the count.<br/>When provided and greater than 0, the number of occurrences value is not calculated by the Fault Management application.",
+            "format": "int64"
+          },
+          "objectFullName": {
+            "type": "string",
+            "description": "The fdn of the alarm; \"&lt;sourceSystem&gt;:&lt;objectFullName&gt;\" form the full source of the alarm.",
+            "example": "11.22.33.44:fm:Alarm:/port[port-id='1/1/9']/linkDown"
+          },
+          "probableCause": {
+            "type": "string",
+            "description": "The most likely cause of the alarm.<br/> The value should use camelCase notation with a leading lowercase.<br/> The complete list of expected values below corresponds to ITU-T X.733 or other standards, such as ITU-T M.3100, 2G and 3G.<br/> Refer to ITU-T X.733 for explanation of the ITU-T X.733 values.<br/> Duplicate values not supported:<br/> For antennaProblem, use antennaFailure<br/> For bandwidthReduction, use bandwidthReduced<br/> For batteryChargingFault, use batteryChargingFailure<br/> For callSetupFailure, use callEstablishmentError<br/> For communicationProtocolError, use communicationsProtocolError<br/> For communicationsReceiveFailure, use receiveFailure<br/> For communicationSubsystemFailure, use communicationsSubsystemFailure<br/> For configurationOrCustomisationError, use configurationOrCustomizationError<br/> For configurationOrCustomizingError, use configurationOrCustomizationError<br/> For diskProblem, use diskFailure<br/> For equipmentFailure, use equipmentMalfunction<br/> For excessiveErrorRate, use excessiveBER<br/> For excessiveResponseTime, use responseTimeExcessive<br/> For excessiveRetransmissionRate, use retransmissionRateExcessive<br/> For fanFailure, use coolingFanFailure<br/> For fire, use fireDetected<br/> For flood, use floodDetected<br/> For intrusionDetected, use intrusionDetection<br/> For iODeviceError, use inputOutputDeviceError<br/> For leakDetection, use leakDetected<br/> For lossOfSynchronization, use lossOfSynchronisation<br/> For lostRedundancy, use lossOfRedundancy<br/> For signalQualityEvaluationFault, use signalQualityEvaluationFailure<br/> For smokeDetected, use smoke<br/> For transceiverProblem, use transceiverFailure<br/> For unauthorizedAccessAttempt, use unauthorisedAccessAttempt<br/> For underlayingResourcesUnavailable, use underlyingResourceUnavailable",
+            "example": "equipmentMalfunction",
+            "enum": [
+              "a-bisToBTSInterfaceFailure, a-bisToTRXInterfaceFailure, adapterError, airCompressorFailure, airConditioningFailure, airDryerFailure, alarmIndicationSignal, antennaFailure, applicationSubsystemFailure, authenticationFailure, backPlaneFailure, bandwidthReduced, batteryBreakdown, batteryChargingFailure, batteryDischarging, batteryFailure, breachOfConfidentiality, broadcastChannelFailure, cableTamper, callEstablishmentError, clockSynchronizationProblem, combinerProblem, commercialPowerFailure, communicationsProtocolError, communicationsSubsystemFailure, communicationsTransmitFailure, configurationOrCustomizationError, congestion, connectionEstablishmentError, coolingFanFailure, coolingSystemFailure, corruptData, cpuCyclesLimitExceeded, databaseInconsistency, datasetOrModemError, dataSetProblem, degradedSignal, delayedInformation, demodulationFailure, denialOfService, diskFailure, dTE-DCEInterfaceError, duplicateInformation, enclosureDoorOpen, engineFailure, equipmentIdentifierDuplication, equipmentMalfunction, excessiveBER, excessiveReceiverTemperature, excessiveTransmitterOutputPower, excessiveTransmitterTemperature, excessiveVibration, explosiveGas, externalEquipmentFailure, externalIFDeviceProblem, externalPointFailure, externalPowerSupplyFailure, externalTransmissionDeviceFailure, farEndReceiverFailure, fileError, fileSystemCallUnsuccessful, fireDetected, fireDetectorFailure, floodDetected, framingError, frequencyHoppingDegraded, frequencyHoppingFailure, frequencyRedefinitionFailed, fuseFailure, generatorFailure, heatingOrVentilationOrCoolingSystemProblem, highHumidity, highTemperature, highWind, humidityUnacceptable, iceBuildUp, indeterminate, informationMissing, informationModificationDetected, informationOutOfSequence, inputDeviceError, inputOutputDeviceError, inputParameterOutOfRange, intrusionDetection, invalidMessageReceived, invalidMSUReceived, invalidParameter, invalidPointer, keyExpired, lANError, lAPDLinkProtocolFailure, leakDetected, lineCardProblem, lineInterfaceFailure, linkFailure, localAlarmIndication, localNodeTransmissionError, lossOfFrame, lossOfMultiFrame, lossOfPointer, lossOfRealTime, lossOfRedundancy, lossOfSignal, lossOfSynchronisation, lowBatteryThreshold, lowCablePressure, lowFuel, lowHumidity, lowTemperature, lowWater, mainsBreakdownWithBatteryBackup, mainsBreakdownWithoutBatteryBackup, materialSupplyExhausted, memoryMismatch, messageNotExpected, messageNotInitialized, messageOutOfSequence, modulationFailure, multiplexerProblem, nEIdentifierDuplication, nonRepudiationFailure, outOfCPUCycles, outOfHoursActivity, outOfMemory, outOfService, outputDeviceError, pathTraceMismatch, payloadTypeMismatch, performanceDegraded, powerProblem, powerSupplyFailure, pressureUnacceptable, proceduralError, processorProblem, protectingResourceFailure, protectionMechanismFailure, protectionPathFailure, pumpFailure, queueSizeExceeded, realTimeClockFailure, receiveFailure, receiverAntennaFault, receiverFailure, receiverMultiCouplerFailure, rectifierFailure, rectifierHighVoltage, rectifierLowFVoltage, reducedAlarmReporting, reducedEventReporting, reducedLoggingCapability, reducedTransmitterOutputPower, reinitialized, remoteAlarmIndication, remoteAlarmInterface, remoteNodeTransmissionError, replaceableUnitMissing, replaceableUnitProblem, replaceableUnitTypeMismatch, resourceAdministrativelyDown, resourceAtOrNearingCapacity, responseTimeExcessive, retransmissionRateExcessive, routingFailure, sfwrDownloadFailure, sfwrEnvironmentProblem, signalLabelMismatch, signalQualityEvaluationFailure, smoke, softwareError, softwareProgramAbnormallyTerminated, softwareProgramError, sS7ProtocolFailure, storageCapacityProblem, synchronizationSourceMismatch, systemCallUnsuccessful, systemResourcesOverload, temperatureUnacceptable, terminalProblem, thresholdCrossed, timeoutExpired, timeslotHardwareFailure, timingProblem, toxicGas, toxicLeakDetected, transceiverFailure, transcoderOrRateAdapterProblem, transcoderProblem, transmissionError, transmitFailure, transmitterAntennaFailure, transmitterAntennaNotAdjusted, transmitterFailure, transmitterLowVoltageOrCurrent, transmitterOffFrequency, trunkCardProblem, unauthorisedAccessAttempt, unavailable, underlyingResourceUnavailable, unexpectedInformation, unspecifiedReason, variableOutOfRange, ventilationsSystemFailure, versionMismatch, watchDogTimerExpired"
+            ]
+          },
+          "rootCause": {
+            "type": "boolean",
+            "description": "WS-NOC specific.<br/>Whether the alarm is a root cause or not.<br/>An alarm is a root cause if it was not caused by another alarm.<br/>When provided, the root cause value is not calculated by the Fault Management application."
+          },
+          "severity": {
+            "type": "string",
+            "description": "The severity of the alarm. Refer to ITU-T X.733 for a full description of possible severities.<ul><li>Indeterminate: Indicates that the severity level cannot be determined.</li><li>Warning: Indicates the detection of a potential or impending service affecting fault, before any significant effects have been observed. Action should be taken to further diagnose (if necessary) and correct the problem in order to prevent it from becoming service affecting fault.</li><li>Minor: Indicates the existence of a non-service affecting fault condition and that corrective action should be taken in order to prevent a more serious fault becoming service affecting fault.</li><li>Major: Indicates that a service affecting condition has developed and an urgent corrective action is required.</li><li>Critical: Indicates that a service affecting condition has occurred and an immediate corrective action is required.</li></ul>",
+            "example": "warning",
+            "enum": [
+              "critical, major, minor, warning, condition, info, indeterminate"
+            ]
+          },
+          "sourceSystem": {
+            "type": "string",
+            "description": "The partial FDN identifying the source system.<br/>Must be in a valid modelFdn format i.e. \"fdn:&lt;scheme&gt;:&lt;namespace&gt;\".<br/>When the source system matches one of the NSP source systems, the alarm may be removed at any point without notice such as in a full resync of the given source.",
+            "example": "fdn:app:mdm-ami-cmodel"
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "Indicates the type of the Source types nfmp and other are not supported by this API.",
+            "example": "mdm",
+            "enum": [
+              "nsp, nsd, nfmt, nrcp, nrct, nrcf, nrcx, mdm"
+            ]
+          },
+          "specificProblem": {
+            "type": "string",
+            "description": "The specific problem that caused the alarm."
+          }
+        }
+      },
+      "ResponseDataString": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseString"
+          }
+        }
+      },
+      "ResponseString": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataMapObjectObject": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseMapObjectObject"
+          }
+        }
+      },
+      "ResponseMapObjectObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "SquelchedEntityNode": {
+        "type": "object",
+        "properties": {
+          "fdn": {
+            "type": "string",
+            "description": "The FDN of the port or NE to be squelched."
+          }
+        }
+      },
+      "EscalationPolicyNode": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "noAlarm",
+              "cleared",
+              "indeterminate",
+              "info",
+              "condition",
+              "warning",
+              "minor",
+              "major",
+              "critical"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "frequency",
+              "numOfOccurrences",
+              "timeWithoutAckClear"
+            ]
+          },
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "The de-escalation policies for this alarm policy. Set to [] for no policy."
+      },
+      "IndividualAlarmPolicyChangeNode": {
+        "type": "object",
+        "properties": {
+          "squelch": {
+            "type": "boolean",
+            "description": "Set to true to automatically squelch an alarm when received."
+          },
+          "initialSeverity": {
+            "type": "string",
+            "description": "Specify the severity to set on an alarm when received.",
+            "enum": [
+              "indeterminate",
+              "info",
+              "condition",
+              "warning",
+              "minor",
+              "major",
+              "critical"
+            ]
+          },
+          "userText": {
+            "type": "string",
+            "description": "Set the custom text field of an alarm when received."
+          },
+          "autoAck": {
+            "type": "boolean",
+            "description": "Set to true if the alarm should be automatically acknowledged when received."
+          },
+          "historyEnabled": {
+            "type": "boolean",
+            "description": "Set to true if the alarm should be logged as a historical alarm."
+          },
+          "escalationPolicy": {
+            "type": "array",
+            "description": "The escalation policies for this alarm policy. Set to [] for no policy.",
+            "items": {
+              "$ref": "#/components/schemas/EscalationPolicyNode"
+            }
+          },
+          "deEscalationPolicy": {
+            "type": "array",
+            "description": "The de-escalation policies for this alarm policy. Set to [] for no policy.",
+            "items": {
+              "$ref": "#/components/schemas/EscalationPolicyNode"
+            }
+          },
+          "useGlobalAging": {
+            "type": "boolean",
+            "description": "Set to true if the alarm is using the global aging settings."
+          },
+          "useAlarmPolicyAging": {
+            "type": "boolean",
+            "description": "Set to true if the alarm should use alarm policy aging settings."
+          },
+          "autoDeletionDays": {
+            "type": "integer",
+            "description": "Set the auto deletion days for the alarm policy aging settings.",
+            "format": "int32"
+          },
+          "debouncingEnabled": {
+            "type": "boolean",
+            "description": "Set to true when the clear events for an alarm should be automatically debounced."
+          },
+          "debouncingHoldPeriod": {
+            "type": "integer",
+            "description": "Set the debouncing hold period when debouncingEnabled is true.",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseDataHashSetString": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseHashSetString"
+          }
+        }
+      },
+      "ResponseHashSetString": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "HistoricalAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string"
+          },
+          "previousSeverity": {
+            "type": "string"
+          },
+          "originalSeverity": {
+            "type": "string"
+          },
+          "highestSeverity": {
+            "type": "string"
+          },
+          "probableCause": {
+            "type": "string"
+          },
+          "alarmName": {
+            "type": "string"
+          },
+          "specificProblem": {
+            "type": "string"
+          },
+          "alarmType": {
+            "type": "string"
+          },
+          "affectedObject": {
+            "type": "string"
+          },
+          "affectedObjectType": {
+            "type": "string"
+          },
+          "affectedObjectName": {
+            "type": "string"
+          },
+          "fdn": {
+            "type": "string"
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "wasAcknowledged": {
+            "type": "boolean"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "clearedBy": {
+            "type": "string"
+          },
+          "deletedBy": {
+            "type": "string"
+          },
+          "firstTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeSeverityChanged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeCleared": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeAcknowledged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "timeLogged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nodeTimeOffset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrences": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceClear": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceAck": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lifespan": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "serviceAffecting": {
+            "type": "boolean"
+          },
+          "implicitlyCleared": {
+            "type": "boolean"
+          },
+          "additionalText": {
+            "type": "string"
+          },
+          "neId": {
+            "type": "string"
+          },
+          "neName": {
+            "type": "string"
+          },
+          "userText": {
+            "type": "string"
+          },
+          "adminState": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deletionStatus": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceSystem": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseDataHistoricalAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseHistoricalAlarmDataV2"
+          }
+        }
+      },
+      "ResponseHistoricalAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/HistoricalAlarmDataV2"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataListHistoricalAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListHistoricalAlarmDataV2"
+          }
+        }
+      },
+      "ResponseListHistoricalAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalAlarmDataV2"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AlarmSetResponseData": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseHashSetString"
+          }
+        }
+      },
+      "AlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "fdn": {
+            "type": "string"
+          },
+          "objectFullName": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceSystem": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "previousSeverity": {
+            "type": "string"
+          },
+          "originalSeverity": {
+            "type": "string"
+          },
+          "highestSeverity": {
+            "type": "string"
+          },
+          "probableCause": {
+            "type": "string"
+          },
+          "alarmName": {
+            "type": "string"
+          },
+          "specificProblem": {
+            "type": "string"
+          },
+          "alarmType": {
+            "type": "string"
+          },
+          "affectedObject": {
+            "type": "string"
+          },
+          "affectedObjectType": {
+            "type": "string"
+          },
+          "affectedObjectName": {
+            "type": "string"
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "wasAcknowledged": {
+            "type": "boolean"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "clearedBy": {
+            "type": "string"
+          },
+          "deletedBy": {
+            "type": "string"
+          },
+          "firstTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeSeverityChanged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeCleared": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeAcknowledged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nodeTimeOffset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "frequency": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrences": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceClear": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceAck": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "serviceAffecting": {
+            "type": "boolean"
+          },
+          "implicitlyCleared": {
+            "type": "boolean"
+          },
+          "additionalText": {
+            "type": "string"
+          },
+          "neId": {
+            "type": "string"
+          },
+          "neName": {
+            "type": "string"
+          },
+          "userText": {
+            "type": "string"
+          },
+          "adminState": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rootCause": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResponseAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/AlarmDataV2"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseAlarmDataV2"
+          }
+        }
+      },
+      "ImpactNode": {
+        "type": "object",
+        "properties": {
+          "alarmFdn": {
+            "type": "string"
+          },
+          "impacts": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImpactNode"
+            }
+          }
+        }
+      },
+      "ResponseDataImpactNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseImpactNode"
+          }
+        }
+      },
+      "ResponseImpactNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/ImpactNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "CauseNode": {
+        "type": "object",
+        "properties": {
+          "alarmFdn": {
+            "type": "string"
+          },
+          "causes": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CauseNode"
+            }
+          }
+        }
+      },
+      "ResponseCauseNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/CauseNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataCauseNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseCauseNode"
+          }
+        }
+      },
+      "ResponseDataListMapObjectObject": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListMapObjectObject"
+          }
+        }
+      },
+      "ResponseListMapObjectObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataListString": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListString"
+          }
+        }
+      },
+      "ResponseListString": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AlarmRootCauseDetailsResponseData": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListAlarmDataV2"
+          }
+        }
+      },
+      "ResponseListAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlarmDataV2"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AlarmDetailsResponseData": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListRootCauseAndImpactDetailsAlarmDataV2"
+          }
+        }
+      },
+      "ResponseListRootCauseAndImpactDetailsAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RootCauseAndImpactDetailsAlarmDataV2"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "RootCauseAndImpactDetails": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "noCausality",
+              "causalityDetailsNotAvailable",
+              "inProgress",
+              "causalityDetailsAvailable",
+              "error"
+            ]
+          },
+          "impacts": {
+            "$ref": "#/components/schemas/ImpactNode"
+          },
+          "rootCauses": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Impact tree and root cause list for the alarm."
+      },
+      "RootCauseAndImpactDetailsAlarmDataV2": {
+        "type": "object",
+        "properties": {
+          "fdn": {
+            "type": "string"
+          },
+          "objectFullName": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceSystem": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "previousSeverity": {
+            "type": "string"
+          },
+          "originalSeverity": {
+            "type": "string"
+          },
+          "highestSeverity": {
+            "type": "string"
+          },
+          "probableCause": {
+            "type": "string"
+          },
+          "alarmName": {
+            "type": "string"
+          },
+          "specificProblem": {
+            "type": "string"
+          },
+          "alarmType": {
+            "type": "string"
+          },
+          "affectedObject": {
+            "type": "string"
+          },
+          "affectedObjectType": {
+            "type": "string"
+          },
+          "affectedObjectName": {
+            "type": "string"
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "wasAcknowledged": {
+            "type": "boolean"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "clearedBy": {
+            "type": "string"
+          },
+          "deletedBy": {
+            "type": "string"
+          },
+          "firstTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDetected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeSeverityChanged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeDeEscalated": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeCleared": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastTimeAcknowledged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nodeTimeOffset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "frequency": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrences": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceClear": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numberOfOccurrencesSinceAck": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "serviceAffecting": {
+            "type": "boolean"
+          },
+          "implicitlyCleared": {
+            "type": "boolean"
+          },
+          "additionalText": {
+            "type": "string"
+          },
+          "neId": {
+            "type": "string"
+          },
+          "neName": {
+            "type": "string"
+          },
+          "userText": {
+            "type": "string"
+          },
+          "adminState": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rootCause": {
+            "type": "boolean"
+          },
+          "rootCauseAndImpactDetails": {
+            "$ref": "#/components/schemas/RootCauseAndImpactDetails"
+          }
+        },
+        "description": "The rootCauseAndImpactDetails property is only returned when includeRootCauseAndImpactDetails is true."
+      },
+      "ResponseDataSeverityNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseSeverityNode"
+          }
+        }
+      },
+      "ResponseSeverityNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/SeverityNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "SeverityAutoNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "allowPolicyBasedEscalation": {
+            "type": "boolean"
+          },
+          "allowPolicyBasedDeEscalation": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SeverityManualNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "allowManualPromotion": {
+            "type": "boolean"
+          },
+          "allowManualDemotion": {
+            "type": "boolean"
+          },
+          "allowManualClearingOfAutoClearingAlarms": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SeverityNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "manual": {
+            "$ref": "#/components/schemas/SeverityManualNode"
+          },
+          "automatic": {
+            "$ref": "#/components/schemas/SeverityAutoNode"
+          }
+        }
+      },
+      "OverflowNode": {
+        "type": "object",
+        "properties": {
+          "warningThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overflowAction": {
+            "type": "string"
+          },
+          "purgeCriteria": {
+            "type": "string"
+          },
+          "purgePercent": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseDataOverflowNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseOverflowNode"
+          }
+        }
+      },
+      "ResponseOverflowNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/OverflowNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "HistoricalOverflowNode": {
+        "type": "object",
+        "properties": {
+          "maxSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warningThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "criticalThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warningPurgePercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "criticalPurgePercent": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseDataHistoricalOverflowNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseHistoricalOverflowNode"
+          }
+        }
+      },
+      "ResponseHistoricalOverflowNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/HistoricalOverflowNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "HistoricalNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "logOnChange": {
+            "type": "boolean"
+          },
+          "logOnDelete": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResponseDataHistoricalNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseHistoricalNode"
+          }
+        }
+      },
+      "ResponseHistoricalNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/HistoricalNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "EmailNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "fdn": {
+            "type": "string"
+          },
+          "policyName": {
+            "type": "string"
+          },
+          "policyFilter": {
+            "type": "string"
+          },
+          "emailRecipients": {
+            "type": "string"
+          },
+          "maxFrequency": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseDataListEmailNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListEmailNode"
+          }
+        }
+      },
+      "ResponseListEmailNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailNode"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataEmailNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseEmailNode"
+          }
+        }
+      },
+      "ResponseEmailNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/EmailNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "DeleteNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "manual": {
+            "$ref": "#/components/schemas/DeleteSubNode"
+          },
+          "correlated": {
+            "$ref": "#/components/schemas/DeleteSubNode"
+          },
+          "automatic": {
+            "$ref": "#/components/schemas/DeleteSubNode"
+          }
+        }
+      },
+      "DeleteSubNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "deletionRule": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseDataDeleteNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseDeleteNode"
+          }
+        }
+      },
+      "ResponseDeleteNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/DeleteNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "IndividualAlarmPolicyNode": {
+        "type": "object",
+        "properties": {
+          "alarmName": {
+            "type": "string"
+          },
+          "alarmType": {
+            "type": "string"
+          },
+          "probableCause": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "other",
+              "nsd",
+              "nfmp",
+              "nfmt",
+              "nrcp",
+              "nrct",
+              "nrcf",
+              "nrcx",
+              "mdm",
+              "nsp",
+              "tsc"
+            ]
+          },
+          "squelch": {
+            "type": "boolean"
+          },
+          "initialSeverity": {
+            "type": "string",
+            "enum": [
+              "noAlarm",
+              "cleared",
+              "indeterminate",
+              "info",
+              "condition",
+              "warning",
+              "minor",
+              "major",
+              "critical"
+            ]
+          },
+          "userText": {
+            "type": "string"
+          },
+          "fdn": {
+            "type": "string"
+          },
+          "escalationPolicy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EscalationPolicyNode"
+            }
+          },
+          "deEscalationPolicy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EscalationPolicyNode"
+            }
+          },
+          "implicitlyCleared": {
+            "type": "boolean"
+          },
+          "useGlobalAging": {
+            "type": "boolean"
+          },
+          "useAlarmPolicyAging": {
+            "type": "boolean"
+          },
+          "autoDeletionDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "debouncingEnabled": {
+            "type": "boolean"
+          },
+          "debouncingHoldPeriod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "autoAck": {
+            "type": "boolean"
+          },
+          "historyEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResponseDataListIndividualAlarmPolicyNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseListIndividualAlarmPolicyNode"
+          }
+        }
+      },
+      "ResponseListIndividualAlarmPolicyNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndividualAlarmPolicyNode"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataIndividualAlarmPolicyNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseIndividualAlarmPolicyNode"
+          }
+        }
+      },
+      "ResponseIndividualAlarmPolicyNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/IndividualAlarmPolicyNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AgingNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "agingTime": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseAgingNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/AgingNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataAgingNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseAgingNode"
+          }
+        }
+      },
+      "AckAutoNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AckCorrelatedNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "acknowledgementRule": {
+            "type": "string"
+          }
+        }
+      },
+      "AckNode": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "correlated": {
+            "$ref": "#/components/schemas/AckCorrelatedNode"
+          },
+          "automatic": {
+            "$ref": "#/components/schemas/AckAutoNode"
+          }
+        }
+      },
+      "ResponseAckNode": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/AckNode"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResponseDataAckNode": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseAckNode"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "REST Token": {
+        "type": "apiKey",
+        "description": "Paste your Bearer token here (e.g. 'Bearer eyJhbGciOiJIUzI1Ni...')",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  }
+}

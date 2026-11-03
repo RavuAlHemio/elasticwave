@@ -1,0 +1,585 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NSP REST Gateway REST API",
+    "description": "The entry point for REST client requests to appropriate web subsystems in NSP.",
+    "license": {},
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "https://wavesuite.example.com/rest-gateway/rest/api",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "REST Token": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "location",
+      "description": "Rest gateway REST API location service"
+    },
+    {
+      "name": "authentication",
+      "description": "Rest gateway REST Authentication service"
+    }
+  ],
+  "paths": {
+    "/v1/auth/token": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Authentication operation that consumes JSON content type",
+        "description": "Prior to sending any REST request, the OSS application will have to first authenticat the user. This is done by sending a POST request, using Basic authentication (base64 encoded credentials in the form of username:password), to obtain a Bearer token which will be used for future communications.",
+        "operationId": "handleJsonAuthOrRefreshTokenRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK - Successful retrieval of authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Malformed content or invalid data provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authorization rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable Service unavailable - the server is not ready to handle the request, please try it later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/revocation": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Revocation Operation",
+        "description": "To revoke/terminate a bearer token, the OSS client can send a POST request with the token or client user_name details.",
+        "operationId": "revokeToken",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "token_type_hint",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "client_credentials",
+                "refresh_token"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiValueMapStringString"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful revoke the Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "bad request"
+          }
+        }
+      }
+    },
+    "/v1/location/services": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "summary": "NSP restful location service operation",
+        "description": "Retrieve NSP restful service(s)",
+        "operationId": "getRestServices",
+        "parameters": [
+          {
+            "name": "serviceName",
+            "in": "query",
+            "description": "Filter NSP restful service by service name(s)",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of NSP restful service(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "no NSP restful service(s) found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataRestServices"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/location/services/{serviceName}": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "summary": "NSP restful location service operation",
+        "description": "Retrieve a NSP restful service by service name",
+        "operationId": "getRestServiceByServiceName",
+        "parameters": [
+          {
+            "name": "serviceName",
+            "in": "path",
+            "description": "Query NSP restful service by a given service name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of NSP restful service by service name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "no NSP restful service found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataRestServices"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/location/services/{serviceName}/{serviceVersion}": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "summary": "NSP restful location service operation",
+        "description": "Retrieve a NSP restful service by service name and version",
+        "operationId": "getRestServiceByServiceNameAndVersion",
+        "parameters": [
+          {
+            "name": "serviceName",
+            "in": "path",
+            "description": "NSP service name, i.e. alarms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceVersion",
+            "in": "path",
+            "description": "NSP service version, i.e. v1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of NSP restful service by service name and version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "no NSP restful service found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataService"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/location/services/endpoints": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "summary": "NSP restful location service endpoint operation",
+        "description": "Retrieve NSP restful service endpoint(s)",
+        "operationId": "getRestServiceEndpoints",
+        "parameters": [
+          {
+            "name": "endPoint",
+            "in": "query",
+            "description": "Query NSP restful service endpoints by a given service endpoint",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of NSP restful service endpoints",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceEndpoint"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "no NSP restful service endpoint found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataRestServiceEndpoints"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthRequest": {
+        "type": "object",
+        "properties": {
+          "grant_type": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        }
+      },
+      "MultiValueMapStringString": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "properties": {
+          "all": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "writeOnly": true
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "description": "NSP Restful Service",
+        "properties": {
+          "serviceName": {
+            "type": "string"
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceInstance"
+            }
+          }
+        }
+      },
+      "ServiceInstance": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "docUrl": {
+            "type": "string"
+          },
+          "effectiveBaseUrl": {
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ResponseDataRestServices": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseRestServices"
+          }
+        }
+      },
+      "ResponseRestServices": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/RestServices"
+          },
+          "errors": {
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "RestServices": {
+        "type": "object",
+        "description": "List of NSP Restful Service",
+        "properties": {
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Service"
+            }
+          }
+        }
+      },
+      "ResponseDataService": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseService"
+          }
+        }
+      },
+      "ResponseService": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "errors": {
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "ServiceEndpoint": {
+        "type": "object",
+        "description": "NSP Restful Service Endpoint",
+        "properties": {
+          "docUrl": {
+            "type": "string"
+          },
+          "effectiveUrl": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseDataRestServiceEndpoints": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/ResponseRestServiceEndpoints"
+          }
+        }
+      },
+      "ResponseRestServiceEndpoints": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "endRow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "previousPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the previous page of data, or \"null\" if there is no previous page."
+          },
+          "nextPage": {
+            "type": "string",
+            "description": "(Optional) A paged URL request pointing to the next page of data, or \"null\" if there is no next page."
+          },
+          "data": {
+            "$ref": "#/components/schemas/RestServiceEndpoints"
+          },
+          "errors": {
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "RestServiceEndpoints": {
+        "type": "object",
+        "description": "List of NSP Restful Service Endpoint",
+        "properties": {
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceEndpoint"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "REST Token": {
+        "type": "apiKey",
+        "description": "Paste your Bearer token here (e.g. 'Bearer eyJhbGciOiJIUzI1Ni...')",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  }
+}
