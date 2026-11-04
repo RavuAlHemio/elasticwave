@@ -148,6 +148,10 @@ impl TokenAuthClient {
             .body(refresh_string)
             .send().await?;
 
+        // apparently I have to pass WaveSuite credentials *and* the refresh token?!
+        // what's the point of the refresh token if I can simply ask for an access token with only the WaveSuite creds?
+        // => waiting for answer in Nokia ticket 06213883
+
         todo!();
     }
 }
