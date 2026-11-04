@@ -12,6 +12,7 @@ pub(crate) static CONFIG: OnceLock<RwLock<Config>> = OnceLock::new();
 pub struct Config {
     pub wave_suite: WaveSuiteConfig,
     pub elastic: ElasticConfig,
+    pub elastic_wave: ElasticWaveConfig,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
@@ -28,4 +29,9 @@ pub struct ElasticConfig {
     pub password: String,
     pub active_alarms_index: String,
     pub alarm_info_index: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct ElasticWaveConfig {
+    pub query_interval_s: u64,
 }
