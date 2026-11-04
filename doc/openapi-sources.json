@@ -1,0 +1,10 @@
+[
+  {
+    "file": "rest-gateway-api-docs.json",
+    "source_url": "https://wavesuite.example.com/rest-gateway/rest/api/v3/api-docs?group=v1"
+  },
+  {
+    "file": "fault-management-api-docs.json",
+    "source_url": "https://wavesuite.example.com/FaultManagement/rest/api/v3/api-docs/v2"
+  }
+]
