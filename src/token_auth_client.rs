@@ -2,7 +2,8 @@ use std::fmt;
 
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use reqwest::{Client, Method};
+use reqwest::{Client, Method, StatusCode};
+use serde::{Deserialize, Serialize};
 use serde_json;
 use tokio::sync::Mutex;
 use url::Url;
@@ -48,16 +49,24 @@ impl ClientState {
     );
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+struct TokenPair {
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
 
 #[derive(Debug)]
 pub(crate) enum Error {
     Reqwest(reqwest::Error),
+    JsonParsing(serde_json::Error),
     Authentication,
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Reqwest(e) => e.fmt(f),
+            Self::JsonParsing(e) => e.fmt(f),
             Self::Authentication => write!(f, "authentication failed"),
         }
     }
@@ -65,14 +74,20 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Error::Reqwest(e) => Some(e),
-            Error::Authentication => None,
+            Self::Reqwest(e) => Some(e),
+            Self::JsonParsing(e) => Some(e),
+            Self::Authentication => None,
         }
     }
 }
 impl From<reqwest::Error> for Error {
     fn from(value: reqwest::Error) -> Self {
         Self::Reqwest(value)
+    }
+}
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Self::JsonParsing(value)
     }
 }
 
@@ -101,11 +116,11 @@ impl TokenAuthClient {
         }
     }
 
-    pub async fn get(&self, url: Url) -> Result<_, Error> {
-        self.perform(Method::GET, url, None).await
+    pub async fn get(&self, url: &Url) -> Result<reqwest::Response, Error> {
+        self.perform(&Method::GET, url, None).await
     }
 
-    pub async fn perform(&self, method: Method, url: Url, body: Option<_>) -> Result<_, Error> {
+    pub async fn perform(&self, method: &Method, url: &Url, body: Option<&[u8]>) -> Result<reqwest::Response, Error> {
         let mut state_guard = self.state.lock().await;
 
         if let Some(response) = self.try_perform_with_access_token(&mut *state_guard, method, url, body.clone()).await? {
@@ -123,21 +138,21 @@ impl TokenAuthClient {
         Err(Error::Authentication)
     }
 
-    async fn try_perform_with_access_token(&self, state: &mut ClientState, method: Method, url: Url, body: Option<_>) -> Result<Option<_>, Error> {
+    async fn try_perform_with_access_token(&self, state: &mut ClientState, method: &Method, url: &Url, body: Option<&[u8]>) -> Result<Option<reqwest::Response>, Error> {
         if !state.has_access_token() {
             return Ok(None);
         }
         todo!();
     }
 
-    async fn try_perform_after_refreshing_token(&self, state: &mut ClientState, method: Method, url: Url, body: Option<_>) -> Result<Option<_>, Error> {
+    async fn try_perform_after_refreshing_token(&self, state: &mut ClientState, method: &Method, url: &Url, body: Option<&[u8]>) -> Result<Option<reqwest::Response>, Error> {
         if !state.has_refresh_token() {
             return Ok(None);
         }
         todo!();
     }
 
-    async fn try_perform_after_fresh_login(&self, state: &mut ClientState, method: Method, url: Url, body: Option<_>) -> Result<Option<_>, Error> {
+    async fn try_perform_after_fresh_login(&self, state: &mut ClientState, method: &Method, url: &Url, body: Option<&[u8]>) -> Result<Option<reqwest::Response>, Error> {
         todo!();
     }
 
@@ -166,11 +181,48 @@ impl TokenAuthClient {
             .header("Content-Type", "application/json")
             .header("Authorization", &basic_auth)
             .body(refresh_string)
-            .send().await?
-            .error_for_status()?;
+            .send().await?;
+        if response.status() == StatusCode::FORBIDDEN {
+            // login data is not valid
+            return Err(Error::Authentication);
+        } else if response.status() == StatusCode::UNAUTHORIZED {
+            // refresh token is not valid
+            return Err(Error::Authentication);
+        }
+        response.error_for_status_ref()?;
         let response_string = response.text().await?;
-        let response_json: serde_json::Value = serde_json::from_str(&response_string)
-            .expect("failed to read JSON response");
-        todo!();
+        let response_token_pair: TokenPair = serde_json::from_str(&response_string)?;
+        state.set_access_token(response_token_pair.access_token);
+        state.set_refresh_token(response_token_pair.refresh_token);
+        Ok(())
+    }
+
+    async fn try_logging_in(&self, state: &mut ClientState) -> Result<(), Error> {
+        assert!(state.has_refresh_token());
+
+        // prepare the body
+        let login_value = serde_json::json!({
+            "grant_type": "client_credentials",
+        });
+        let login_string = serde_json::to_string(&login_value)
+            .expect("failed to serialize login data");
+        let basic_auth = self.get_basic_auth_header_value();
+
+        let response = self.client
+            .post(self.auth_url.clone())
+            .header("Content-Type", "application/json")
+            .header("Authorization", &basic_auth)
+            .body(login_string)
+            .send().await?;
+        if response.status() == StatusCode::FORBIDDEN {
+            // login data is not valid
+            return Err(Error::Authentication);
+        }
+        response.error_for_status_ref()?;
+        let response_string = response.text().await?;
+        let response_token_pair: TokenPair = serde_json::from_str(&response_string)?;
+        state.set_access_token(response_token_pair.access_token);
+        state.set_refresh_token(response_token_pair.refresh_token);
+        Ok(())
     }
 }
