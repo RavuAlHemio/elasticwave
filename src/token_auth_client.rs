@@ -1,5 +1,7 @@
 use std::fmt;
 
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use reqwest::{Client, Method};
 use serde_json;
 use tokio::sync::Mutex;
@@ -89,7 +91,14 @@ impl TokenAuthClient {
             .user_agent("elasticwave (github.com/RavuAlHemio/elasticwave)")
             .build()
             .expect("failed to build client");
-        todo!();
+        let state = Mutex::new(ClientState::new());
+        Self {
+            client,
+            state,
+            auth_url,
+            basic_username,
+            basic_password,
+        }
     }
 
     pub async fn get(&self, url: Url) -> Result<_, Error> {
@@ -132,6 +141,12 @@ impl TokenAuthClient {
         todo!();
     }
 
+    fn get_basic_auth_header_value(&self) -> String {
+        let base64_me = format!("{}:{}", self.basic_username, self.basic_password);
+        let based = BASE64_STANDARD.encode(&base64_me);
+        format!("Basic {}", based)
+    }
+
     async fn try_refreshing_token(&self, state: &mut ClientState) -> Result<(), Error> {
         assert!(state.has_refresh_token());
 
@@ -142,16 +157,20 @@ impl TokenAuthClient {
         });
         let refresh_string = serde_json::to_string(&refresh_value)
             .expect("failed to serialize token refresh data");
+        let basic_auth = self.get_basic_auth_header_value();
+
+        // apparently one has to pass WaveSuite credentials *and* the refresh token?!
+        // (if we skip the refresh token, a new session is opened)
         let response = self.client
             .post(self.auth_url.clone())
             .header("Content-Type", "application/json")
+            .header("Authorization", &basic_auth)
             .body(refresh_string)
-            .send().await?;
-
-        // apparently I have to pass WaveSuite credentials *and* the refresh token?!
-        // what's the point of the refresh token if I can simply ask for an access token with only the WaveSuite creds?
-        // => waiting for answer in Nokia ticket 06213883
-
+            .send().await?
+            .error_for_status()?;
+        let response_string = response.text().await?;
+        let response_json: serde_json::Value = serde_json::from_str(&response_string)
+            .expect("failed to read JSON response");
         todo!();
     }
 }
