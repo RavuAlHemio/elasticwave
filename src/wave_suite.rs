@@ -145,9 +145,12 @@ impl WaveSuiteClient {
         }
     }
 
-    pub async fn get_live_alarm_ids(&self) -> Result<Vec<String>, Error> {
-        // TODO: filter
-        let alarms_url = self.fault_api_root.join("v2/alarms")?;
+    pub async fn get_live_alarm_ids(&self, impact_greater_than: Option<u32>) -> Result<Vec<String>, Error> {
+        let mut alarms_url = self.fault_api_root.join("v2/alarms")?;
+        if let Some(igt) = impact_greater_than {
+            alarms_url.query_pairs_mut()
+                .append_pair("alarmFilter", &format!("impact>{}", igt));
+        };
         let mut alarm_ids = Vec::new();
         loop {
             let this_alarms_url = alarms_url.join(&format!("?pageStart={}", alarm_ids.len())).unwrap();

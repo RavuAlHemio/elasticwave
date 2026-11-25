@@ -47,7 +47,7 @@ async fn run() {
         .set(RwLock::new(config))
         .expect("CONFIG already set?!");
 
-    let alarms = wave_suite_client.get_live_alarm_ids()
+    let alarms = wave_suite_client.get_live_alarm_ids(Some(0))
         .await.expect("failed to get alarms");
 
     // store token pair
