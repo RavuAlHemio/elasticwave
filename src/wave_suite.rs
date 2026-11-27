@@ -173,7 +173,6 @@ impl WaveSuiteClient {
     }
 
     pub async fn get_alarm_by_id(&self, alarm_id: &str) -> Result<Alarm, Error> {
-        // TODO: filter
         let alarm_id_encoded = urlencoding::encode(alarm_id);
         let alarm_url = self.fault_api_root.join(&format!("v2/alarms/{}", alarm_id_encoded))?;
         let resp_res = self.client.get(&alarm_url).await;
@@ -184,19 +183,6 @@ impl WaveSuiteClient {
         Ok(Alarm {
             data: resp_obj.response.data,
         })
-        /*
-        let resp_obj: AlarmIdListResponseOuter = serde_json::from_str(&resp_string)?;
-        if let Some(errors) = resp_obj.response.errors.as_ref() {
-            for error in errors {
-                error!("error while getting live alarm IDs: {:?}", error);
-            }
-        }
-        if resp_obj.response.alarm_id_list.len() == 0 {
-            break;
-        }
-        alarm_ids.extend(resp_obj.response.alarm_id_list);
-        Ok(alarm_ids)
-        */
     }
 
     pub async fn token_pair(&self) -> Option<TokenPair> {
