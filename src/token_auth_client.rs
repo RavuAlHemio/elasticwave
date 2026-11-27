@@ -6,7 +6,7 @@ use reqwest::{Certificate, Client, Method, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use tokio::sync::Mutex;
-use tracing::debug;
+use tracing::{debug, error, warn};
 use url::Url;
 
 
@@ -132,6 +132,7 @@ pub(crate) struct TokenAuthClient {
 impl TokenAuthClient {
     pub fn new(
         auth_url: Url,
+        logout_url: Url,
         basic_username: String,
         basic_password: String,
         custom_tls_certs: Option<&[Certificate]>,
@@ -139,6 +140,7 @@ impl TokenAuthClient {
     ) -> Self {
         let inner_client = TokenAuthClientInner::new(
             auth_url,
+            logout_url,
             basic_username,
             basic_password,
             custom_tls_certs,
@@ -168,12 +170,14 @@ struct TokenAuthClientInner {
     state: Mutex<ClientState>,
 
     auth_url: Url,
+    logout_url: Url,
     basic_username: String,
     basic_password: String,
 }
 impl TokenAuthClientInner {
     pub fn new(
         auth_url: Url,
+        logout_url: Url,
         basic_username: String,
         basic_password: String,
         custom_tls_certs: Option<&[Certificate]>,
@@ -206,6 +210,7 @@ impl TokenAuthClientInner {
             client,
             state,
             auth_url,
+            logout_url,
             basic_username,
             basic_password,
         }
@@ -241,6 +246,45 @@ impl TokenAuthClientInner {
         // pass this one up finally
         debug!("attempting to perform after fresh login");
         self.try_perform_after_fresh_login(&mut *state_guard, method, url, body).await
+    }
+
+    pub async fn logout<'a>(&self) -> ResponseResult {
+        let mut state_guard = self.state.lock().await;
+
+        let access_token = match state_guard.access_token() {
+            Some(at) => at,
+            None => {
+                warn!("cannot log out without access token");
+                return ResponseResult::CredentialMissing;
+            }
+        };
+        let access_token_encoded = urlencoding::encode(access_token);
+        let request_body = format!("token={}", access_token_encoded);
+
+        debug!("logging out");
+        let response_res = self.client
+            .request(Method::POST, self.logout_url.clone())
+            .basic_auth(&self.basic_username, Some(&self.basic_password))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(request_body)
+            .send().await;
+        let response = match response_res {
+            Ok(r) => r,
+            Err(e) => {
+                error!("error performing logout: {}", e);
+                return ResponseResult::Error(e.into());
+            },
+        };
+        if let Err(e) = response.error_for_status_ref() {
+            error!("error response when performing logout: {}", e);
+            return ResponseResult::ErrorStatus(response);
+        }
+
+        // logged out => these tokens are no longer valid
+        state_guard.clear_access_token();
+        state_guard.clear_refresh_token();
+
+        ResponseResult::SuccessWithBody(response)
     }
 
     async fn try_perform_with_access_token<'a>(&self, state: &mut ClientState, method: &Method, url: &Url, body: Option<Body<'a>>) -> ResponseResult {

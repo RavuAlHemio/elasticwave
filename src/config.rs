@@ -20,6 +20,7 @@ pub struct Config {
 pub struct WaveSuiteConfig {
     pub base_url: Url,
     #[serde(default)] pub custom_auth_url: Option<Url>,
+    #[serde(default)] pub custom_logout_url: Option<Url>,
     #[serde(default)] pub custom_fault_management_base_url: Option<Url>,
     pub username: String,
     pub password: String,
@@ -37,6 +38,15 @@ impl WaveSuiteConfig {
         } else {
             self.base_url.join("rest-gateway/rest/api/v1/auth/token")
                 .expect("failed to construct auth URL from base URL and path")
+        }
+    }
+
+    pub fn logout_url(&self) -> Url {
+        if let Some(clu) = self.custom_logout_url.as_ref() {
+            clu.clone()
+        } else {
+            self.base_url.join("rest-gateway/rest/api/v1/auth/revocation")
+                .expect("failed to construct logout URL from base URL and path")
         }
     }
 

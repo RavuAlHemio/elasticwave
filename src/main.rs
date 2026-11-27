@@ -9,7 +9,9 @@ use std::path::PathBuf;
 use clap::Parser;
 use tokio::sync::RwLock;
 
-use crate::{config::{CONFIG, Config}, token_auth_client::TokenAuthClient, wave_suite::WaveSuiteClient};
+use crate::config::{CONFIG, Config};
+use crate::token_auth_client::TokenAuthClient;
+use crate::wave_suite::WaveSuiteClient;
 
 
 #[derive(Parser)]
@@ -36,6 +38,7 @@ async fn run() {
         .expect("failed to read file of custom trusted certificates");
     let auth_client = TokenAuthClient::new(
         config.wave_suite.auth_url(),
+        config.wave_suite.logout_url(),
         config.wave_suite.username.clone(),
         config.wave_suite.password.clone(),
         custom_certs.as_ref().map(|cc| cc.as_slice()),
