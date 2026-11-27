@@ -10,6 +10,7 @@ use std::time::Duration;
 use clap::Parser;
 use tokio::sync::RwLock;
 use tokio::time::sleep;
+use tracing::{debug, error};
 
 use crate::config::{CONFIG, Config};
 use crate::elastic::{AuthInfo, ElasticClient};
@@ -66,13 +67,17 @@ async fn run() {
         config.elastic.trust_system_certificate_authorities,
     );
 
-    let sleep_interval_s = config.elastic_wave.query_interval_s;
-
     CONFIG
         .set(RwLock::new(config))
         .expect("CONFIG already set?!");
 
     loop {
+        let config_copy = {
+            let config_guard = CONFIG
+                .get().expect("CONFIG not set?!")
+                .read().await;
+            config_guard.clone()
+        };
         let alarm_ids = wave_suite_client.get_live_alarm_ids(Some(0))
             .await.expect("failed to get alarms");
 
@@ -86,24 +91,33 @@ async fn run() {
             }
         }
 
-        println!("[");
-        let mut is_first = true;
-        for alarm in &alarm_ids {
-            if is_first {
-                is_first = false;
-            } else {
-                println!(",");
-            }
-            let alarm = wave_suite_client.get_alarm_by_id(alarm)
+        // upsert each alarm's info into an Elastic document
+        for alarm_id in &alarm_ids {
+            let alarm = wave_suite_client.get_alarm_by_id(alarm_id)
                 .await.expect("failed to get alarm");
-            let alarm_json = serde_json::to_string(&alarm.data)
+            let alarm_json = serde_json::to_value(&alarm.data)
                 .expect("failed to serialize alarm to JSON");
-            println!("{}", alarm_json);
+
+            debug!("upserting {}", alarm_id);
+            let upsert_res = el_client.upsert_document(
+                &config_copy.elastic.alarm_info_index,
+                alarm_id,
+                alarm_json,
+            ).await;
+            if let Err(e) = upsert_res {
+                error!(
+                    "failed to upsert alarm {:?} in alarm info index {:?}: {}",
+                    alarm_id, config_copy.elastic.alarm_info_index, e,
+                );
+            }
         }
-        println!("]");
+
+        // clear out all active alarms
+        //debug!("clearing out active alarms");
+        // TODO
 
         // sleepy eepy
-        sleep(Duration::from_secs(sleep_interval_s)).await;
+        sleep(Duration::from_secs(config_copy.elastic_wave.query_interval_s)).await;
     }
 }
 
