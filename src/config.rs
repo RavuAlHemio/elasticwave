@@ -78,6 +78,24 @@ pub struct ElasticConfig {
     pub password: String,
     pub active_alarms_index: String,
     pub alarm_info_index: String,
+    #[serde(default)] pub custom_trusted_certificate_file: Option<String>,
+
+    #[serde(default = "ElasticConfig::default_trust_system_certificate_authorities")]
+    pub trust_system_certificate_authorities: bool,
+}
+impl ElasticConfig {
+    fn default_trust_system_certificate_authorities() -> bool { true }
+
+    pub fn custom_trusted_certificates(&self) -> Result<Option<Vec<Certificate>>, reqwest::Error> {
+        if let Some(ctcf) = self.custom_trusted_certificate_file.as_ref() {
+            let bundle_bytes = std::fs::read(ctcf)
+                .expect("failed to read trusted certificate bundle");
+            Certificate::from_pem_bundle(&bundle_bytes)
+                .map(|certs| Some(certs))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
